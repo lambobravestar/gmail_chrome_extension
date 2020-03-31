@@ -1,0 +1,93 @@
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/font-awesome.min.css">
+  <link rel="stylesheet" href="css/bootstrap.min.css">
+  <script src="popup.js"></script>
+  <script src="./js/jquery-3.4.1.min.js"></script>
+  <script src="pdf.js"></script>
+  <script src="pdf.worker.js"></script>
+  <script src="./js/bootstrap.min.js"></script>
+  <script src="./js/jquery.bootpag.js"></script>
+  <script src="./js/jquery.bootpag.min.js"></script>
+  <script src="js/jquery.bootpag.js"></script>
+  <script src="js/jquery.bootpag.min.js"></script>
+</head>
+
+<body>
+  <div class="container">
+    <div>
+      <object data="img/header_bg.svg" type="image/svg+xml" width="400px" height="200px"></object>
+      <object data="img/logo_01.svg" type="image/svg+xml" width="160px" height="200px"
+        style="margin-top: -258px;"></object>
+    </div>
+
+    <div id="searchBar">
+      <input type="text" id="searchText" placeholder="Search" required>
+    </div>
+    <div id="searchIcon">
+      <object data="img/search.svg" type="image/svg+xml" width="20px" height="20px"></object>
+    </div>
+    <div class="filter">
+      <div class="allType link" id="allType">All</div>
+      <div id="documentType" class="link">Docs</div>
+      <div id="imageType" class="link">Images</div>
+      <div id="videoType" class="link">Videos</div>
+      <div id="musicType" class="link">Musics</div>
+    </div>
+
+    <div>
+      <div class="bs-docs-example">
+        <p class="demo4_top"></p>
+      </div>
+
+    </div>
+
+    <div class="loading" id="loading">
+      <img src="img/loading.svg" width="100px" height="100px" />
+    </div>
+    <div id="dateSlider" class="fixed-header" style="display: none;">
+      <div class="fixed-header__nav">
+        <object data="img/slider_label.svg" type="image/svg+xml" id="slideSvg" width="100px" height="100px"></object>
+      </div>
+    </div>
+
+    <!-- <button id="testBase64">TRY IT</button> -->
+    <div id="thumbnail">
+    </div>
+
+    <div id="myModal" class="modal">
+      <div class="modal-content">
+        <div id="closeSpan">
+          <object data="img/close.svg" type="image/svg+xml" id="closeSvg" width="20px" height="20px"></object>
+        </div>
+        <div class="toolBar">
+          <div id="viewEmail">
+            <object data="img/view_email.svg" type="image/svg+xml" id="viewSvg" width="20px" height="20px"></object>
+            <div style="margin-left: 5px;">
+              <span>View Email</span>
+            </div>
+          </div>
+          <div id="deleteAttach">
+            <object data="img/bin.svg" type="image/svg+xml" id="deleteSvg" width="20px" height="20px"></object>
+            <div style="margin-left: 5px;">
+              <span>Delete</span>
+            </div>
+          </div>
+          <div id="downloadAttach">
+            <object data="img/download_button.svg" type="image/svg+xml" id="downloadSvg" style="margin-top: -10px;"
+              width="100px" height="40px"></object>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</body>
+
+</html>

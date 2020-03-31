@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="34px" height="34px" viewBox="0 0 34 34" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 58 (84663) - https://sketch.com -->
+    <title>text_icon</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <polygon id="path-1" points="0 0 10 0 10 11 0 11"></polygon>
+    </defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="sidebar" transform="translate(-1055.000000, -582.000000)">
+            <g id="result-2" transform="translate(1043.000000, 498.000000)">
+                <g id="List-item">
+                    <g id="text_icon" transform="translate(13.000000, 85.000000)">
+                        <circle id="Oval" stroke="#FFFFFF" stroke-width="2" fill="#CDEFFB" cx="16" cy="16" r="16"></circle>
+                        <g id="Group-3" transform="translate(11.000000, 11.000000)">
+                            <g>
+                                <mask id="mask-2" fill="white">
+                                    <use xlink:href="#path-1"></use>
+                                </mask>
+                                <g id="Clip-2"></g>
+                                <path d="M10,0 L10,2.36631762 L8.81847425,2.36631762 C8.79261408,2.00271949 8.76612318,1.63110307 8.73742471,1.22633416 L5.6813523,1.22633416 L5.6813523,9.78152992 C6.04970198,9.80712674 6.42924722,9.83349454 6.84442903,9.86232951 L6.84442903,11 L3.15178656,11 L3.15178656,9.85261505 C3.52155539,9.83565331 3.88123246,9.81930835 4.30130247,9.80018784 L4.30130247,1.24159973 L1.23971112,1.24159973 C1.22173515,1.59702539 1.20391687,1.94767091 1.18310259,2.36014971 L0,2.36014971 L0,0 L10,0 Z" id="Fill-1" fill="#46B8E2" mask="url(#mask-2)"></path>
+                            </g>
+                        </g>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

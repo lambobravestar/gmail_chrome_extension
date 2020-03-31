@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="90px" height="20px" viewBox="0 0 68 20" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 58 (84663) - https://sketch.com -->
+    <title>label</title>
+    <desc>Created with Sketch.</desc>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="sidebar" transform="translate(-1355.000000, -296.000000)">
+            <g id="slider" transform="translate(1355.000000, 290.000000)">
+                <g id="label" transform="translate(0.000000, 6.000000)">
+                    <path d="M9,0 L68,0 L68,0 L68,20 L9,20 C4.02943725,20 6.08718376e-16,15.9705627 0,11 L0,9 C-6.08718376e-16,4.02943725 4.02943725,9.13077564e-16 9,0 Z" id="Rectangle" fill="#F95159"></path>
+                    <text id="7/01/2020" font-family="Lato-Medium, Lato" font-size="8" font-weight="400" letter-spacing="0.322500021" fill="#FFFFFF">
+                        <tspan id="svgText" x="6.1792499" y="14">07/02/2020</tspan>
+                    </text>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

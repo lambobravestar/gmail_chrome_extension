@@ -1,0 +1,67 @@
+{
+    "manifest_version": 2,
+    "name": "waldo",
+    "description": "Dittaching gmail attachments",
+    "version": "1.0.1",
+    "content_scripts": [
+        {
+            "run_at": "document_end",
+            "matches": [
+                "*://mail.google.com/*"
+            ],
+            "js": [
+                "js/jquery-3.4.1.min.js",
+                "js/bootstrap.min.js",
+                "js/jquery.bootpag.js",
+                "js/jquery.bootpag.min.js",
+                "content-script.js",
+                "pdf.js",
+                "pdf.worker.js"
+            ],
+            "css": [
+                "css/style.css"
+            ]
+        }
+    ],
+    "icons": {
+        "16": "icon16.png",
+        "48": "icon48.png",
+        "128": "icon128.png"
+    },
+    "browser_action": {
+        "default_icon": {
+            "128": "icon128.png"
+        }
+    },
+    "web_accessible_resources": [
+        "popup.html",
+        "img/*.svg"
+    ],
+    "background": {
+        "scripts": [
+            "background.js",
+            "js/jquery-3.4.1.min.js"
+        ],
+        "persistent": false
+    },
+    "permissions": [
+        "activeTab",
+        "https://apis.google.com/js/api.js",
+        "storage",
+        "https://www.googleapis.com/",
+        "identity",
+        "identity.email",
+        "http://localhost/"
+    ],
+    "oauth2": {
+        "client_id": "875825219533-s8l59v4bpdnhgf4epuhl02qd970vua41.apps.googleusercontent.com",
+        "scopes": [
+            "https://mail.google.com/",
+            "https://www.googleapis.com/auth/gmail.modify",
+            "https://www.googleapis.com/auth/gmail.readonly",
+            "https://www.googleapis.com/auth/plus.login",
+            "https://www.googleapis.com/auth/userinfo.email"
+        ]
+    },
+    "content_security_policy": "script-src 'self' https://apis.google.com 'unsafe-eval'; object-src 'self'"
+}
