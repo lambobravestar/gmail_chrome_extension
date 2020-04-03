@@ -4,37 +4,45 @@ var processFlag = false;
 chrome.browserAction.onClicked.addListener(function () {
 
 	chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-		if (tabs[0].url.indexOf('mail.google.com') >= 0 && !processFlag) {
+		if (tabs[0].url.indexOf('mail.google.com') >= 0) {
 			tabId = tabs[0].id;
-			processFlag = true;
-			chrome.identity.getAuthToken({
-				interactive: true
-			}, function (token) {
-				if (token) {
-					showMessages(token);
-					chrome.tabs.sendMessage(tabId, {
-						from: "background",
-						action: 'toggle'
-					});
-				}
+			chrome.tabs.sendMessage(tabId, {
+				from: "background",
+				action: 'toggle'
 			});
-			chrome.identity.getProfileUserInfo((userInfo) => {
-				var data = userInfo.email;
-				$.ajax({
-					type: 'POST',
-					url: 'http://localhost/test/insert.php',
-					data: { email: data },
-					success: function (response) {
-						// console.log("response::", response)
-					}, error: function (e) {
-						console.log(e);
+
+			if (!processFlag) {
+				chrome.identity.getAuthToken({
+					interactive: true
+				}, function (token) {
+					if (token) {
+						showMessages(token);
+
 					}
 				});
+				// chrome.identity.getProfileUserInfo((userInfo) => {
+				// 	var data = userInfo.email;
+				// 	$.ajax({
+				// 		type: 'POST',
+				// 		url: 'http://localhost/test/insert.php',
+				// 		data: { email: data },
+				// 		success: function (response) {
+				// 			// console.log("response::", response)
+				// 		}, error: function (e) {
+				// 			console.log(e);
+				// 		}
+				// 	});
 
-			});
+				// });
+			}
+
+			processFlag = true;
+
 		}
 	})
 });
+
+
 
 var g_token = null;
 var count = 0;
@@ -71,7 +79,7 @@ var getStuff = async (userId, token) => {
 var fetchStuff = async (nextPageToken, userId, token) => {
 
 	return new Promise(resolve => {
-		var url = "https://www.googleapis.com/gmail/v1/users/" + userId + "/messages?maxResults=500&q=in%3Ainbox%20has%3Aattachment&pageToken=" + nextPageToken;
+		var url = "https://www.googleapis.com/gmail/v1/users/" + userId + "/messages?maxResults=20&q=in%3Ainbox%20has%3Aattachment&pageToken=" + nextPageToken;
 		fetch(url, {
 			method: 'GET',
 			headers: {
@@ -81,15 +89,13 @@ var fetchStuff = async (nextPageToken, userId, token) => {
 			return res.json();
 		}).then(function (obj) {
 
+			Array.prototype.push.apply(arrayData, obj.messages)
 			nextPageToken = obj.nextPageToken;
-			var newObj = obj;
 			count++;
 			if (count === 15) {
 				return;
 			}
-			newObj.number = count;
-			arrayData.push(newObj);
-			console.log("result of arrayData----->", arrayData)
+			// newObj.number = count;
 			resolve(nextPageToken);
 			// resolve({nextPageToken, hello, world});
 		});

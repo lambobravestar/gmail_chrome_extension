@@ -14,10 +14,33 @@ var fetchMsgCnt = 0;
 var scrollCnt = 0;
 var isFetching = false;
 var sortedFetchMsgArr = [];
+var sizeSortedMsgArr = [];
 var token;
 var emailUrl = "https://mail.google.com/mail/u/0/#inbox/";
 let params = `scrollbars=no, resizable=no, status=no, location=no, toolbar=no, menubar=no, width=1300, height=800, left=100, top=100`;
 var dateArr = [];
+var imageDateArr = [];
+var docuDateArr = [];
+var musicDateArr = [];
+var videoDateArr = [];
+var otherDateArr = [];
+var filterFlag = "All";
+var sortType = [];
+var initialSortFlag = false;
+// var pdfDateArr = [];
+// var jpgDateArr = [];
+// var pngDateArr = [];
+// var docDateArr = [];
+// var docxDateArr = [];
+// var txtDateArr = [];
+
+var nameSearchDateArr = [];
+var emailSearchDateArr = [];
+var subjectSearchDateArr = [];
+var filenameSearchDateArr = [];
+var extensionSearchDateArr = [];
+var searchTextFlag = ""
+var g_emailId;
 
 chrome.runtime.onMessage.addListener(function (message) {
 
@@ -26,27 +49,60 @@ chrome.runtime.onMessage.addListener(function (message) {
 
             $(document).ready(function () {
 
-                var pageTotalCnt = message.pageTotalCnt;
                 dataArr = message.data;
+                document.getElementById("date").addEventListener("change", changeHandler);
+                document.getElementById("size").addEventListener("change", changeHandler);
 
-                // console.log("here data from background----->", dataArr, pageTotalCnt)
+                function changeHandler() {
 
-                for (k = 0; k < pageTotalCnt; k++) {
+                    initialSortFlag = true;
+                    sortType = $('input[name="sortType"]:checked').val()
+                    console.log("RESULT--->", sortType);
 
-                    var idObjs = dataArr[k].messages;
-                    var threadIdArr = idObjs.map(function (idObj) {
+                    dateArr = [];
+                    imageDateArr = [];
+                    docuDateArr = [];
+                    musicDateArr = [];
+                    videoDateArr = [];
+                    otherDateArr = [];
+                    nameSearchDateArr = [];
+                    emailSearchDateArr = [];
+                    subjectSearchDateArr = [];
+                    filenameSearchDateArr = [];
+                    extensionSearchDateArr = [];
+                    searchTextFlag = ""
+
+                    document.getElementById("loading").style.display = "block";
+                    document.getElementById("thumbnail").style.backgroundColor = "white";
+
+                    fetchMsgCnt = 0;
+                    searchFlag = false;
+                    document.getElementById("thumbnail").innerHTML = "";
+
+                    var threadIdArr = dataArr.map(function (idObj) {
                         return Object.values(idObj)[1];
                     });
-                    var i;
                     token = message.token;
                     fetchMsgCnt = 0;
-                    for (i = 0; i < threadIdArr.length; i++) {
+                    for (let i = 0; i < threadIdArr.length; i++) {
 
                         threadId = threadIdArr[i];
                         fetchMessages(threadId, token, threadIdArr.length);
                     }
 
                 }
+
+                var threadIdArr = dataArr.map(function (idObj) {
+                    return Object.values(idObj)[1];
+                });
+                token = message.token;
+                fetchMsgCnt = 0;
+                for (let i = 0; i < threadIdArr.length; i++) {
+
+                    threadId = threadIdArr[i];
+                    fetchMessages(threadId, token, threadIdArr.length);
+                }
+
                 document.getElementById("allType").addEventListener("click", allClickHandler);
 
                 $("div.link").click(function () {
@@ -58,9 +114,23 @@ chrome.runtime.onMessage.addListener(function (message) {
 
                 function allClickHandler() {
 
-                    document.getElementById("dateSlider").style.display = "none";
+                    // document.getElementById("dateSlider").style.display = "none";
+                    filterFlag = "All";
 
                     if (searchFlag) {
+
+                        dateArr = [];
+                        imageDateArr = [];
+                        docuDateArr = [];
+                        musicDateArr = [];
+                        videoDateArr = [];
+                        otherDateArr = [];
+                        nameSearchDateArr = [];
+                        emailSearchDateArr = [];
+                        subjectSearchDateArr = [];
+                        filenameSearchDateArr = [];
+                        extensionSearchDateArr = [];
+                        searchTextFlag = ""
 
                         document.getElementById("loading").style.display = "block";
                         document.getElementById("thumbnail").style.backgroundColor = "white";
@@ -110,6 +180,7 @@ chrome.runtime.onMessage.addListener(function (message) {
                 document.getElementById("documentType").addEventListener("click", documentClickHandler);
                 function documentClickHandler() {
 
+                    filterFlag = "Document";
                     var _nodePdf = document.getElementsByClassName('pdfFormat');
                     for (var i = 0; i < _nodePdf.length; i++) {
                         _nodePdf[i].setAttribute("style", "display:flex;");
@@ -144,6 +215,8 @@ chrome.runtime.onMessage.addListener(function (message) {
                 document.getElementById("imageType").addEventListener("click", imageClickHandler);
 
                 function imageClickHandler() {
+
+                    filterFlag = "Image"
                     var _nodeImage = document.getElementsByClassName('imageFormat');
                     for (var i = 0; i < _nodeImage.length; i++) {
                         _nodeImage[i].setAttribute("style", "display:flex;");
@@ -177,6 +250,8 @@ chrome.runtime.onMessage.addListener(function (message) {
                 document.getElementById("videoType").addEventListener("click", videoClickHandler);
 
                 function videoClickHandler() {
+
+                    filterFlag = "Video";
                     var _nodeVideo = document.getElementsByClassName('videoFormat');
                     for (var i = 0; i < _nodeVideo.length; i++) {
                         _nodeVideo[i].setAttribute("style", "display:flex;");
@@ -212,6 +287,8 @@ chrome.runtime.onMessage.addListener(function (message) {
                 document.getElementById("musicType").addEventListener("click", musicClickHandler);
 
                 function musicClickHandler() {
+
+                    filterFlag = "Music";
                     var _nodeMusic = document.getElementsByClassName('musicFormat');
                     for (var i = 0; i < _nodeMusic.length; i++) {
                         _nodeMusic[i].setAttribute("style", "display:flex;");
@@ -256,15 +333,48 @@ async function isLast(token) {
 
     document.getElementById("dateSlider").style.display = "block";
 
-    sortedFetchMsgArr = fetchMsgArr.sort(function (a, b) {
-        if (a.internalDate < b.internalDate)
-            return -1;
-        else if (a.internalDate == b.internalDate)
-            return 0;
-        else
-            return 1;
-    });
-    sortedFetchMsgArr.reverse();
+    switch (sortType) {
+        case "date":
+            console.log("date");
+            sortedFetchMsgArr = fetchMsgArr.sort(function (a, b) {
+                if (a.internalDate < b.internalDate)
+                    return -1;
+                else if (a.internalDate == b.internalDate)
+                    return 0;
+                else
+                    return 1;
+            });
+            sortedFetchMsgArr.reverse();
+            break;
+
+        case "size":
+            console.log("size");
+            sizeSortedMsgArr = fetchMsgArr.sort(function (a, b) {
+                if (a.sizeEstimate < b.sizeEstimate)
+                    return -1;
+                else if (a.sizeEstimate == b.sizeEstimate)
+                    return 0;
+                else
+                    return 1;
+            });
+            sizeSortedMsgArr.reverse();
+            console.log("result of sizeSort:", sizeSortedMsgArr)
+            break;
+    }
+    // }
+    if (!initialSortFlag) {
+        sortedFetchMsgArr = fetchMsgArr.sort(function (a, b) {
+            if (a.internalDate < b.internalDate)
+                return -1;
+            else if (a.internalDate == b.internalDate)
+                return 0;
+            else
+                return 1;
+        });
+        sortedFetchMsgArr.reverse();
+
+    }
+
 
     async function scrollHandler() {
 
@@ -276,7 +386,42 @@ async function isLast(token) {
         var nthSclTop = Math.floor((document.body.scrollTop - 121) / 150);
         var nodeSvg = document.getElementById("slideSvg");
         var svgDoc = nodeSvg.contentDocument;
-        svgDoc.getElementById("svgText").textContent = dateArr[nthSclTop];
+
+        switch (filterFlag) {
+            case "All":
+                svgDoc.getElementById("svgText").textContent = dateArr[nthSclTop];
+                break;
+            case "Document":
+                svgDoc.getElementById("svgText").textContent = docuDateArr[nthSclTop];
+                break;
+            case "Image":
+                svgDoc.getElementById("svgText").textContent = imageDateArr[nthSclTop];
+                break;
+            case "Music":
+                svgDoc.getElementById("svgText").textContent = musicDateArr[nthSclTop];
+                break;
+            case "Video":
+                svgDoc.getElementById("svgText").textContent = videoDateArr[nthSclTop];
+                break;
+        }
+
+        switch (searchTextFlag) {
+            case "Name":
+                svgDoc.getElementById("svgText").textContent = nameSearchDateArr[nthSclTop];
+                break;
+            case "Email":
+                svgDoc.getElementById("svgText").textContent = emailSearchDateArr[nthSclTop];
+                break;
+            case "Subject":
+                svgDoc.getElementById("svgText").textContent = subjectSearchDateArr[nthSclTop];
+                break;
+            case "Filename":
+                svgDoc.getElementById("svgText").textContent = filenameSearchDateArr[nthSclTop];
+                break;
+            case "Extension":
+                svgDoc.getElementById("svgText").textContent = extensionSearchDateArr[nthSclTop];
+                break;
+        }
 
         // // It's important to add an load event listener to the object,
         // // as it will load the svg doc asynchronously
@@ -286,14 +431,15 @@ async function isLast(token) {
 
         // }, false);
 
-
-        if (!isFetching && !searchFlag) {
-
-        }
-
         if (y >= contentHeight && !isFetching && !searchFlag) {
+            console.log("check if scrolling after fetch done")
             isFetching = true;
-            await displayAttach(sortedFetchMsgArr, token);
+            if (!initialSortFlag) await displayAttach(sortedFetchMsgArr, token);
+            if (initialSortFlag && sortType == "date") {
+                await displayAttach(sortedFetchMsgArr, token);
+            } else if (initialSortFlag && sortType == "size") {
+                await displayAttach(sizeSortedMsgArr, token)
+            }
             isFetching = false;
         }
     }
@@ -315,7 +461,12 @@ async function isLast(token) {
 
     isFetching = true;
     scrollCnt = 0;
-    await displayAttach(sortedFetchMsgArr, token);
+    if (!initialSortFlag) await displayAttach(sortedFetchMsgArr, token);
+    if (initialSortFlag && sortType == "date") {
+        await displayAttach(sortedFetchMsgArr, token);
+    } else if (initialSortFlag && sortType == "size") {
+        await displayAttach(sizeSortedMsgArr, token)
+    }
     isFetching = false;
 
     fetchMsgArr = [];
@@ -323,6 +474,7 @@ async function isLast(token) {
 
 var displayAttach = async (sortedFetchMsgArr, token) => {
 
+    console.log("SortedMessageArray----->", sortedFetchMsgArr)
     var numPerScroll = 0;
     var i = scrollCnt;
     for (i; i < sortedFetchMsgArr.length; i++) {
@@ -334,8 +486,6 @@ var displayAttach = async (sortedFetchMsgArr, token) => {
 
         if (sortedFetchMsgArr[i].payload.mimeType == "multipart/mixed" && sortedFetchMsgArr[i].payload.parts[1]) {
 
-            nth++;
-            numPerScroll++;
             var h = 0;
             for (h = 0; h < sortedFetchMsgArr[i].payload.headers.length; h++) {
                 if (sortedFetchMsgArr[i].payload.headers[h].name === "Date") {
@@ -344,12 +494,6 @@ var displayAttach = async (sortedFetchMsgArr, token) => {
                 }
             }
             var emailId = sortedFetchMsgArr[i].id;
-            var dateInfo = Number(sortedFetchMsgArr[i].internalDate);
-            var slideDate = new Date(dateInfo);
-            var detailDate = slideDate.getDate() + '/' + (slideDate.getMonth() + 1) + '/' + slideDate.getFullYear() + '/' + slideDate.getHours() + '/' + slideDate.getMinutes();
-
-            dateArr.push(detailDate);
-
             var attachmentId = sortedFetchMsgArr[i].payload.parts[1].body.attachmentId;
             var j = 0;
             for (j = 0; j < sortedFetchMsgArr[i].payload.headers.length; j++) {
@@ -394,20 +538,33 @@ var displayAttach = async (sortedFetchMsgArr, token) => {
             var attachFileSize = attachFileSize + 'KB';
             var _attachFileName = attachFileName.toUpperCase();
 
-            if (attachType == "application/pdf") {
+            var dateInfo = Number(sortedFetchMsgArr[i].internalDate);
+            var slideDate = new Date(dateInfo);
+            var detailDate = slideDate.getDate() + '/' + (slideDate.getMonth() + 1) + '/' + slideDate.getFullYear() + '/' + slideDate.getHours() + '/' + slideDate.getMinutes();
+
+            if (attachType == "application/pdf" && _extension != ".ICS" && attachmentId != undefined && messageId != undefined) {
                 attachType = 'pdfFormat';
-            } else if (attachType == "image/png" || attachType == "image/jpeg") {
+                docuDateArr.push(detailDate);
+            } else if ((attachType == "image/png" || attachType == "image/jpeg") && _extension != ".ICS" && attachmentId != undefined && messageId != undefined) {
                 attachType = 'imageFormat';
-            } else if (attachType == "application/vnd.openxmlformats-officedocument.wordprocessingml.document" || attachType == "application/msword" || _extension == ".DOCX") {
+                imageDateArr.push(detailDate);
+            } else if ((attachType == "application/vnd.openxmlformats-officedocument.wordprocessingml.document" || attachType == "application/msword" || _extension == ".DOCX") && _extension != ".ICS" && attachmentId != undefined && messageId != undefined) {
                 attachType = 'wordFormat';
-            } else if (attachType == "text/plain") {
+                docuDateArr.push(detailDate);
+            } else if (attachType == "text/plain" && _extension != ".ICS" && attachmentId != undefined && messageId != undefined) {
                 attachType = 'txtFormat';
-            } else if (attachType == "video/mp4" || attachType == "video/x-msvideo") {
+                docuDateArr.push(detailDate);
+            } else if ((attachType == "video/mp4" || attachType == "video/x-msvideo") && _extension != ".ICS" && attachmentId != undefined && messageId != undefined) {
                 attachType = "videoFormat";
-            } else if (attachType == "audio/mpeg") {
+                videoDateArr.push(detailDate)
+            } else if (attachType == "audio/mpeg" && _extension != ".ICS" && attachmentId != undefined && messageId != undefined) {
                 attachType = "musicFormat";
+                musicDateArr.push(detailDate);
             } else {
-                attachType = "otherFormat";
+                if (_extension != ".ICS" && attachmentId != undefined && messageId != undefined) {
+                    attachType = "otherFormat";
+                    otherDateArr.push(detailDate);
+                }
             }
 
             var nameFlag = false;
@@ -425,6 +582,10 @@ var displayAttach = async (sortedFetchMsgArr, token) => {
             // console.log("attachmentID ------>", attachmentId)
 
             if (_extension != ".ICS" && attachmentId != undefined && messageId != undefined) {
+
+                nth++;
+                numPerScroll++;
+                dateArr.push(detailDate);
                 if (messageId.indexOf("/") != -1) {
                     messageId = messageId.replace(/\//g, '');
                 }
@@ -441,10 +602,29 @@ var displayAttach = async (sortedFetchMsgArr, token) => {
 
 async function searchFunc() {
 
+    filterFlag = "";
+    // pdfDateArr = [];
+    // jpgDateArr = [];
+    // pngDateArr = [];
+    // docDateArr = [];
+    // docxDateArr = [];
+    // txtDateArr = [];
+    // musicDateArr = [];
+    // videoDateArr = [];
+    // otherDateArr = [];
+    nameSearchDateArr = [];
+    emailSearchDateArr = [];
+    subjectSearchDateArr = [];
+    filenameSearchDateArr = [];
+    extensionSearchDateArr = [];
+
     document.getElementById("thumbnail").innerHTML = "";
+    var numPerScroll = 0;
+    var i = scrollCnt;
 
     for (m = 0; m < sortedFetchMsgArr.length; m++) {
 
+        scrollCnt++;
         if (searchIsChanged) {
             document.getElementById("searchText").removeEventListener("change", searchFunc);
         }
@@ -452,6 +632,7 @@ async function searchFunc() {
         if (sortedFetchMsgArr[m].payload.mimeType == "multipart/mixed" && sortedFetchMsgArr[m].payload.parts[1]) {
 
             nth++;
+            numPerScroll++;
             var h = 0;
             for (h = 0; h < sortedFetchMsgArr[m].payload.headers.length; h++) {
                 if (sortedFetchMsgArr[m].payload.headers[h].name === "Date") {
@@ -461,15 +642,14 @@ async function searchFunc() {
             }
 
             var emailId = sortedFetchMsgArr[m].id;
-            var dateInfo = Number(sortedFetchMsgArr[m].internalDate);
-            var slideDate = new Date(dateInfo);
-            var detailDate = slideDate.getDate() + '/' + (slideDate.getMonth() + 1) + '/' + slideDate.getFullYear() + '/' + slideDate.getHours() + '/' + slideDate.getMinutes();
-
             var attachmentId = sortedFetchMsgArr[m].payload.parts[1].body.attachmentId;
             var j = 0;
             for (j = 0; j < sortedFetchMsgArr[m].payload.headers.length; j++) {
                 if (sortedFetchMsgArr[m].payload.headers[j].name === "Message-ID") {
                     var messageId = sortedFetchMsgArr[m].payload.headers[j].value;
+                    if (messageId.indexOf("/") != -1) {
+                        messageId = messageId.replace(/\//g, '');
+                    }
                     break;
                 } else continue;
             }
@@ -497,6 +677,10 @@ async function searchFunc() {
 
             var attachType = sortedFetchMsgArr[m].payload.parts[1].mimeType;
             var attachFileName_origin = sortedFetchMsgArr[m].payload.parts[1].filename;
+            if (attachFileName_origin.length > 29) {
+                var partAttachFileName = attachFileName_origin.slice(0, 26);
+                attachFileName_origin = partAttachFileName + "..."
+            }
             var attachFileSize = Math.round(sortedFetchMsgArr[m].payload.parts[1].body.size / 1000);
             var extension = attachFileName_origin.substr(attachFileName_origin.lastIndexOf('.'));
             var displayExt = attachFileName_origin.substr(attachFileName_origin.lastIndexOf('.') + 1).toUpperCase();
@@ -505,21 +689,32 @@ async function searchFunc() {
             var attachFileSize = attachFileSize + 'KB';
             var _attachFileName = attachFileName.toUpperCase();
 
-            if (attachType == "application/pdf") {
+            if (attachType == "application/pdf" && _extension != ".ICS" && attachmentId != undefined && messageId != undefined) {
                 attachType = 'pdfFormat';
-            } else if (attachType == "image/png" || attachType == "image/jpeg") {
+            } else if ((attachType == "image/png" || attachType == "image/jpeg") && _extension != ".ICS" && attachmentId != undefined && messageId != undefined) {
                 attachType = 'imageFormat';
-            } else if (attachType == "application/vnd.openxmlformats-officedocument.wordprocessingml.document" || attachType == "application/msword" || attachType == "application/octet-stream") {
+            } else if ((attachType == "application/vnd.openxmlformats-officedocument.wordprocessingml.document" || attachType == "application/msword" || _extension == ".DOCX") && _extension != ".ICS" && attachmentId != undefined && messageId != undefined) {
                 attachType = 'wordFormat';
-            } else if (attachType == "text/plain") {
+            } else if (attachType == "text/plain" && _extension != ".ICS" && attachmentId != undefined && messageId != undefined) {
                 attachType = 'txtFormat';
-            } else if (attachType == "video/mp4" || attachType == "video/x-msvideo") {
+            } else if ((attachType == "video/mp4" || attachType == "video/x-msvideo") && _extension != ".ICS" && attachmentId != undefined && messageId != undefined) {
                 attachType = "videoFormat";
-            } else if (attachType == "audio/mpeg") {
+            } else if (attachType == "audio/mpeg" && _extension != ".ICS" && attachmentId != undefined && messageId != undefined) {
                 attachType = "musicFormat";
             } else {
-                attachType = "otherFormat";
+                if (_extension != ".ICS" && attachmentId != undefined && messageId != undefined) {
+                    attachType = "otherFormat";
+                }
             }
+
+            // if (_extension != ".ICS" && attachmentId != undefined && messageId != undefined) {
+            //     dateArr.push(detailDate);
+            //     if (messageId.indexOf("/") != -1) {
+            //         messageId = messageId.replace(/\//g, '');
+            //     }
+            //     await fetchAttachments(messageId, attachmentId, emailId, token, attachType, nth, attachFileName_origin, attachFileSize, displayExt, fromEmailAddr, detailDate, nameFlag, emailFlag, subjectFlag, fileNameFlag, generalFlag, extensionFlag);
+            // }
+
             nameFlag = false;
             emailFlag = false;
             subjectFlag = false;
@@ -528,42 +723,59 @@ async function searchFunc() {
             extensionFlag = false;
             searchFlag = true;
 
+            var dateInfo = Number(sortedFetchMsgArr[m].internalDate);
+            var slideDate = new Date(dateInfo);
+            var detailDate = slideDate.getDate() + '/' + (slideDate.getMonth() + 1) + '/' + slideDate.getFullYear() + '/' + slideDate.getHours() + '/' + slideDate.getMinutes();
+
             var searchText = document.getElementById("searchText").value.toUpperCase();
+            if (_extension != ".ICS" && attachmentId != undefined && messageId != undefined) {
 
-            if (fromName.indexOf(searchText) > -1) {
-                nth++;
-                nameFlag = true;
-                await fetchAttachments(messageId, attachmentId, emailId, token, attachType, nth, attachFileName_origin, attachFileSize, displayExt, fromEmailAddr, detailDate, nameFlag, emailFlag, subjectFlag, fileNameFlag, generalFlag, extensionFlag);
-                emailUrl = emailUrl.replace(emailId, "");
+                if (fromName.indexOf(searchText) > -1) {
 
-            } else if ((fromEmail.indexOf(searchText) > -1) && (searchText.indexOf("@") > -1)) {
+                    searchTextFlag = "Name";
+                    nameSearchDateArr.push(detailDate);
+                    nth++;
+                    nameFlag = true;
+                    await fetchAttachments(messageId, attachmentId, emailId, token, attachType, nth, attachFileName_origin, attachFileSize, displayExt, fromEmailAddr, detailDate, nameFlag, emailFlag, subjectFlag, fileNameFlag, generalFlag, extensionFlag);
+                    emailUrl = emailUrl.replace(emailId, "");
 
-                nth++;
-                emailFlag = true;
-                await fetchAttachments(messageId, attachmentId, emailId, token, attachType, nth, attachFileName_origin, attachFileSize, displayExt, fromEmailAddr, detailDate, nameFlag, emailFlag, subjectFlag, fileNameFlag, generalFlag, extensionFlag);
-                emailUrl = emailUrl.replace(emailId, "");
+                } else if ((fromEmail.indexOf(searchText) > -1) && (searchText.indexOf("@") > -1)) {
 
-            } else if (emailSubject.indexOf(searchText) > -1) {
+                    searchTextFlag = "Email";
+                    emailSearchDateArr.push(detailDate);
+                    nth++;
+                    emailFlag = true;
+                    await fetchAttachments(messageId, attachmentId, emailId, token, attachType, nth, attachFileName_origin, attachFileSize, displayExt, fromEmailAddr, detailDate, nameFlag, emailFlag, subjectFlag, fileNameFlag, generalFlag, extensionFlag);
+                    emailUrl = emailUrl.replace(emailId, "");
 
-                nth++;
-                subjectFlag = true;
-                await fetchAttachments(messageId, attachmentId, emailId, token, attachType, nth, attachFileName_origin, attachFileSize, displayExt, fromEmailAddr, detailDate, nameFlag, emailFlag, subjectFlag, fileNameFlag, generalFlag, extensionFlag);
-                emailUrl = emailUrl.replace(emailId, "");
+                } else if (emailSubject.indexOf(searchText) > -1) {
 
-            } else if (_attachFileName.indexOf(searchText) > -1) {
+                    searchTextFlag = "Subject";
+                    subjectSearchDateArr.push(detailDate);
+                    nth++;
+                    subjectFlag = true;
+                    await fetchAttachments(messageId, attachmentId, emailId, token, attachType, nth, attachFileName_origin, attachFileSize, displayExt, fromEmailAddr, detailDate, nameFlag, emailFlag, subjectFlag, fileNameFlag, generalFlag, extensionFlag);
+                    emailUrl = emailUrl.replace(emailId, "");
 
-                nth++;
-                fileNameFlag = true;
-                await fetchAttachments(messageId, attachmentId, emailId, token, attachType, nth, attachFileName_origin, attachFileSize, displayExt, fromEmailAddr, detailDate, nameFlag, emailFlag, subjectFlag, fileNameFlag, generalFlag, extensionFlag);
-                emailUrl = emailUrl.replace(emailId, "");
+                } else if (_attachFileName.indexOf(searchText) > -1) {
 
-            } else if (_extension == searchText) {
+                    searchTextFlag = "Filename";
+                    filenameSearchDateArr.push(detailDate);
+                    nth++;
+                    fileNameFlag = true;
+                    await fetchAttachments(messageId, attachmentId, emailId, token, attachType, nth, attachFileName_origin, attachFileSize, displayExt, fromEmailAddr, detailDate, nameFlag, emailFlag, subjectFlag, fileNameFlag, generalFlag, extensionFlag);
+                    emailUrl = emailUrl.replace(emailId, "");
 
-                nth++;
-                extensionFlag = true;
-                await fetchAttachments(messageId, attachmentId, emailId, token, attachType, nth, attachFileName_origin, attachFileSize, displayExt, fromEmailAddr, detailDate, nameFlag, emailFlag, subjectFlag, fileNameFlag, generalFlag, extensionFlag);
-                emailUrl = emailUrl.replace(emailId, "");
+                } else if (_extension == searchText) {
 
+                    searchTextFlag = "Extension";
+                    extensionSearchDateArr.push(detailDate);
+                    nth++;
+                    extensionFlag = true;
+                    await fetchAttachments(messageId, attachmentId, emailId, token, attachType, nth, attachFileName_origin, attachFileSize, displayExt, fromEmailAddr, detailDate, nameFlag, emailFlag, subjectFlag, fileNameFlag, generalFlag, extensionFlag);
+                    emailUrl = emailUrl.replace(emailId, "");
+
+                }
             }
 
         }
@@ -590,7 +802,6 @@ function fetchMessages(threadId, token, total, userId = "me") {
         }
         fetchMsgCnt++;
         if (fetchMsgCnt == total) {
-            console.log("fetching message count---->", fetchMsgCnt)
             isLast(token);
         }
     }).catch(error => console.log(error));
@@ -713,10 +924,13 @@ var fetchAttachments = async (messageId, attachmentId, emailId, token, attachTyp
 
                             showPDF(url, newPdfContentId, __CANVAS, __CANVAS_CTX);
 
-                            showDetail("modalPdf", attachFileName_origin, attachFileSize, displayExt, fromEmailAddr, detailDate);
-
+                            showDetail("modalPdf", attachFileName_origin, attachFileSize, displayExt, fromEmailAddr, detailDate, emailId);
+                            g_emailId = emailId
                             document.getElementById("viewEmail").addEventListener("click", viewEmailWindow);
                             document.getElementById("downloadAttach").addEventListener("click", downloadFunc);
+                            // document.getElementById("deleteAttach").addEventListener("click", function () {
+                            //     deleteAttachment(emailId);
+                            // });
                             document.getElementById("deleteAttach").addEventListener("click", deleteAttachment);
                             document.getElementById("closeSpan").addEventListener("click", closeModalFunc);
                         }
@@ -724,7 +938,38 @@ var fetchAttachments = async (messageId, attachmentId, emailId, token, attachTyp
                             document.getElementById("downloadAttach").removeEventListener("click", downloadFunc);
                             downloadFile(blob, attachFileName_origin);
                         }
+                        function closeModalFunc() {
 
+
+                            document.getElementById("downloadAttach").removeEventListener("click", downloadFunc);
+                            document.getElementById("viewEmail").removeEventListener("click", viewEmailWindow);
+                            document.getElementById("deleteAttach").removeEventListener("click", deleteAttachment);
+
+                            document.getElementById("dateSlider").style.zIndex = 5;
+                            if (document.getElementById("modalImage")) {
+                                document.getElementById("modalImage").remove();
+                            }
+                            if (document.getElementById("modalPdf")) {
+                                document.getElementById("modalPdf").remove();
+                            }
+                            if (document.getElementById("modalWord")) {
+                                document.getElementById("modalWord").remove();
+                            }
+                            if (document.getElementById("modalText")) {
+                                document.getElementById("modalText").remove();
+                            }
+                            if (document.getElementById("modalVideo")) {
+                                document.getElementById("modalVideo").remove();
+                            }
+                            if (document.getElementById("modalMusic")) {
+                                document.getElementById("modalMusic").remove();
+                            }
+                            if (document.getElementById("modalOther")) {
+                                document.getElementById("modalOther").remove();
+                            }
+                            var modal = document.getElementById("myModal");
+                            modal.style.display = "none";
+                        }
                         function viewEmailWindow() {
                             document.getElementById("viewEmail").removeEventListener("click", viewEmailWindow);
                             emailUrl += emailId;
@@ -770,7 +1015,7 @@ var fetchAttachments = async (messageId, attachmentId, emailId, token, attachTyp
                         nodeImage.setAttribute("height", "100px");
                         document.getElementById(imageDivId).appendChild(nodeImage);
 
-                        showDetail(nthImageId, attachFileName_origin, attachFileSize, displayExt, fromEmailAddr, detailDate);
+                        showDetail(nthImageId, attachFileName_origin, attachFileSize, displayExt, fromEmailAddr, detailDate, emailId);
 
                         document.getElementById(nthImageId).addEventListener("click", displayDetailImage);
 
@@ -792,10 +1037,14 @@ var fetchAttachments = async (messageId, attachmentId, emailId, token, attachTyp
                             node_modal.setAttribute("id", nthImageModalId);
                             document.getElementsByClassName("modal-content")[0].appendChild(nodeSection);
                             var nodeBr = document.createElement("br");
-                            showDetail("modalImage", attachFileName_origin, attachFileSize, displayExt, fromEmailAddr, detailDate);
+                            showDetail("modalImage", attachFileName_origin, attachFileSize, displayExt, fromEmailAddr, detailDate, emailId);
 
+                            g_emailId = emailId
                             document.getElementById("viewEmail").addEventListener("click", viewEmailWindow);
                             document.getElementById("downloadAttach").addEventListener("click", downloadFunc);
+                            // document.getElementById("deleteAttach").addEventListener("click", function () {
+                            //     deleteAttachment(emailId);
+                            // });
                             document.getElementById("deleteAttach").addEventListener("click", deleteAttachment);
                             document.getElementById("closeSpan").addEventListener("click", closeModalFunc);
                         }
@@ -803,8 +1052,39 @@ var fetchAttachments = async (messageId, attachmentId, emailId, token, attachTyp
                             document.getElementById("downloadAttach").removeEventListener("click", downloadFunc);
                             downloadFile(blob, attachFileName_origin);
                         }
+                        function closeModalFunc() {
 
+                            document.getElementById("downloadAttach").removeEventListener("click", downloadFunc);
+                            document.getElementById("viewEmail").removeEventListener("click", viewEmailWindow);
+                            document.getElementById("deleteAttach").removeEventListener("click", deleteAttachment);
+
+                            document.getElementById("dateSlider").style.zIndex = 5;
+                            if (document.getElementById("modalImage")) {
+                                document.getElementById("modalImage").remove();
+                            }
+                            if (document.getElementById("modalPdf")) {
+                                document.getElementById("modalPdf").remove();
+                            }
+                            if (document.getElementById("modalWord")) {
+                                document.getElementById("modalWord").remove();
+                            }
+                            if (document.getElementById("modalText")) {
+                                document.getElementById("modalText").remove();
+                            }
+                            if (document.getElementById("modalVideo")) {
+                                document.getElementById("modalVideo").remove();
+                            }
+                            if (document.getElementById("modalMusic")) {
+                                document.getElementById("modalMusic").remove();
+                            }
+                            if (document.getElementById("modalOther")) {
+                                document.getElementById("modalOther").remove();
+                            }
+                            var modal = document.getElementById("myModal");
+                            modal.style.display = "none";
+                        }
                         function viewEmailWindow() {
+
                             document.getElementById("viewEmail").removeEventListener("click", viewEmailWindow);
                             emailUrl += emailId;
                             window.open(emailUrl, '_blank', params);
@@ -852,7 +1132,7 @@ var fetchAttachments = async (messageId, attachmentId, emailId, token, attachTyp
                         nodeImage.setAttribute("height", "100px");
                         document.getElementById(wordDivId).appendChild(nodeImage);
 
-                        showDetail(nthWordId, attachFileName_origin, attachFileSize, displayExt, fromEmailAddr, detailDate);
+                        showDetail(nthWordId, attachFileName_origin, attachFileSize, displayExt, fromEmailAddr, detailDate, emailId);
 
                         document.getElementById(nthWordId).addEventListener("click", displayDetailWord);
 
@@ -871,10 +1151,14 @@ var fetchAttachments = async (messageId, attachmentId, emailId, token, attachTyp
 
                             document.getElementsByClassName("modal-content")[0].appendChild(nodeSection);
                             var nodeBr = document.createElement("br");
-                            showDetail("modalWord", attachFileName_origin, attachFileSize, displayExt, fromEmailAddr, detailDate);
+                            showDetail("modalWord", attachFileName_origin, attachFileSize, displayExt, fromEmailAddr, detailDate, emailId);
 
+                            g_emailId = emailId
                             document.getElementById("viewEmail").addEventListener("click", viewEmailWindow);
                             document.getElementById("downloadAttach").addEventListener("click", downloadFunc);
+                            // document.getElementById("deleteAttach").addEventListener("click", function () {
+                            //     deleteAttachment(emailId);
+                            // });
                             document.getElementById("deleteAttach").addEventListener("click", deleteAttachment);
                             document.getElementById("closeSpan").addEventListener("click", closeModalFunc);
                         }
@@ -882,7 +1166,37 @@ var fetchAttachments = async (messageId, attachmentId, emailId, token, attachTyp
                             document.getElementById("downloadAttach").removeEventListener("click", downloadFunc);
                             downloadFile(blob, attachFileName_origin);
                         }
+                        function closeModalFunc() {
 
+                            document.getElementById("downloadAttach").removeEventListener("click", downloadFunc);
+                            document.getElementById("viewEmail").removeEventListener("click", viewEmailWindow);
+                            document.getElementById("deleteAttach").removeEventListener("click", deleteAttachment);
+
+                            document.getElementById("dateSlider").style.zIndex = 5;
+                            if (document.getElementById("modalImage")) {
+                                document.getElementById("modalImage").remove();
+                            }
+                            if (document.getElementById("modalPdf")) {
+                                document.getElementById("modalPdf").remove();
+                            }
+                            if (document.getElementById("modalWord")) {
+                                document.getElementById("modalWord").remove();
+                            }
+                            if (document.getElementById("modalText")) {
+                                document.getElementById("modalText").remove();
+                            }
+                            if (document.getElementById("modalVideo")) {
+                                document.getElementById("modalVideo").remove();
+                            }
+                            if (document.getElementById("modalMusic")) {
+                                document.getElementById("modalMusic").remove();
+                            }
+                            if (document.getElementById("modalOther")) {
+                                document.getElementById("modalOther").remove();
+                            }
+                            var modal = document.getElementById("myModal");
+                            modal.style.display = "none";
+                        }
                         function viewEmailWindow() {
                             document.getElementById("viewEmail").removeEventListener("click", viewEmailWindow);
                             emailUrl += emailId;
@@ -927,7 +1241,7 @@ var fetchAttachments = async (messageId, attachmentId, emailId, token, attachTyp
                         nodeImage.setAttribute("height", "100px");
                         document.getElementById(txtDivId).appendChild(nodeImage);
 
-                        showDetail(nthTextId, attachFileName_origin, attachFileSize, displayExt, fromEmailAddr, detailDate);
+                        showDetail(nthTextId, attachFileName_origin, attachFileSize, displayExt, fromEmailAddr, detailDate, emailId);
 
                         document.getElementById(nthTextId).addEventListener("click", displayDetailText);
 
@@ -947,10 +1261,14 @@ var fetchAttachments = async (messageId, attachmentId, emailId, token, attachTyp
 
                             document.getElementsByClassName("modal-content")[0].appendChild(nodeSection);
                             var nodeBr = document.createElement("br");
-                            showDetail("modalText", attachFileName_origin, attachFileSize, displayExt, fromEmailAddr, detailDate);
+                            showDetail("modalText", attachFileName_origin, attachFileSize, displayExt, fromEmailAddr, detailDate, emailId);
 
+                            g_emailId = emailId
                             document.getElementById("viewEmail").addEventListener("click", viewEmailWindow);
                             document.getElementById("downloadAttach").addEventListener("click", downloadFunc);
+                            // document.getElementById("deleteAttach").addEventListener("click", function () {
+                            //     deleteAttachment(emailId);
+                            // });
                             document.getElementById("deleteAttach").addEventListener("click", deleteAttachment);
                             document.getElementById("closeSpan").addEventListener("click", closeModalFunc);
                         }
@@ -958,6 +1276,37 @@ var fetchAttachments = async (messageId, attachmentId, emailId, token, attachTyp
                         function downloadFunc() {
                             document.getElementById("downloadAttach").removeEventListener("click", downloadFunc);
                             downloadFile(blob, attachFileName_origin);
+                        }
+                        function closeModalFunc() {
+
+                            document.getElementById("downloadAttach").removeEventListener("click", downloadFunc);
+                            document.getElementById("viewEmail").removeEventListener("click", viewEmailWindow);
+                            document.getElementById("deleteAttach").removeEventListener("click", deleteAttachment);
+
+                            document.getElementById("dateSlider").style.zIndex = 5;
+                            if (document.getElementById("modalImage")) {
+                                document.getElementById("modalImage").remove();
+                            }
+                            if (document.getElementById("modalPdf")) {
+                                document.getElementById("modalPdf").remove();
+                            }
+                            if (document.getElementById("modalWord")) {
+                                document.getElementById("modalWord").remove();
+                            }
+                            if (document.getElementById("modalText")) {
+                                document.getElementById("modalText").remove();
+                            }
+                            if (document.getElementById("modalVideo")) {
+                                document.getElementById("modalVideo").remove();
+                            }
+                            if (document.getElementById("modalMusic")) {
+                                document.getElementById("modalMusic").remove();
+                            }
+                            if (document.getElementById("modalOther")) {
+                                document.getElementById("modalOther").remove();
+                            }
+                            var modal = document.getElementById("myModal");
+                            modal.style.display = "none";
                         }
                         function viewEmailWindow() {
                             document.getElementById("viewEmail").removeEventListener("click", viewEmailWindow);
@@ -1003,7 +1352,7 @@ var fetchAttachments = async (messageId, attachmentId, emailId, token, attachTyp
                         document.getElementById(videoDivId).appendChild(nodeImage);
 
 
-                        showDetail(nthVideoId, attachFileName_origin, attachFileSize, displayExt, fromEmailAddr, detailDate);
+                        showDetail(nthVideoId, attachFileName_origin, attachFileSize, displayExt, fromEmailAddr, detailDate, emailId);
 
                         document.getElementById(nthVideoId).addEventListener("click", displayDetailVideo);
 
@@ -1023,10 +1372,14 @@ var fetchAttachments = async (messageId, attachmentId, emailId, token, attachTyp
                             document.getElementsByClassName("modal-content")[0].appendChild(nodeSection);
 
                             var nodeBr = document.createElement("br");
-                            showDetail("modalVideo", attachFileName_origin, attachFileSize, displayExt, fromEmailAddr, detailDate);
+                            showDetail("modalVideo", attachFileName_origin, attachFileSize, displayExt, fromEmailAddr, detailDate, emailId);
 
+                            g_emailId = emailId
                             document.getElementById("viewEmail").addEventListener("click", viewEmailWindow);
                             document.getElementById("downloadAttach").addEventListener("click", downloadFunc);
+                            // document.getElementById("deleteAttach").addEventListener("click", function () {
+                            //     deleteAttachment(emailId);
+                            // });
                             document.getElementById("deleteAttach").addEventListener("click", deleteAttachment);
                             document.getElementById("closeSpan").addEventListener("click", closeModalFunc);
                         }
@@ -1034,6 +1387,37 @@ var fetchAttachments = async (messageId, attachmentId, emailId, token, attachTyp
                         function downloadFunc() {
                             document.getElementById("downloadAttach").removeEventListener("click", downloadFunc);
                             downloadFile(blob, attachFileName_origin);
+                        }
+                        function closeModalFunc() {
+
+                            document.getElementById("downloadAttach").removeEventListener("click", downloadFunc);
+                            document.getElementById("viewEmail").removeEventListener("click", viewEmailWindow);
+                            document.getElementById("deleteAttach").removeEventListener("click", deleteAttachment);
+
+                            document.getElementById("dateSlider").style.zIndex = 5;
+                            if (document.getElementById("modalImage")) {
+                                document.getElementById("modalImage").remove();
+                            }
+                            if (document.getElementById("modalPdf")) {
+                                document.getElementById("modalPdf").remove();
+                            }
+                            if (document.getElementById("modalWord")) {
+                                document.getElementById("modalWord").remove();
+                            }
+                            if (document.getElementById("modalText")) {
+                                document.getElementById("modalText").remove();
+                            }
+                            if (document.getElementById("modalVideo")) {
+                                document.getElementById("modalVideo").remove();
+                            }
+                            if (document.getElementById("modalMusic")) {
+                                document.getElementById("modalMusic").remove();
+                            }
+                            if (document.getElementById("modalOther")) {
+                                document.getElementById("modalOther").remove();
+                            }
+                            var modal = document.getElementById("myModal");
+                            modal.style.display = "none";
                         }
                         function viewEmailWindow() {
                             document.getElementById("viewEmail").removeEventListener("click", viewEmailWindow);
@@ -1079,7 +1463,7 @@ var fetchAttachments = async (messageId, attachmentId, emailId, token, attachTyp
                         nodeImage.setAttribute("height", "100px");
                         document.getElementById(musicDivId).appendChild(nodeImage);
 
-                        showDetail(nthMusicId, attachFileName_origin, attachFileSize, displayExt, fromEmailAddr, detailDate);
+                        showDetail(nthMusicId, attachFileName_origin, attachFileSize, displayExt, fromEmailAddr, detailDate, emailId);
 
                         document.getElementById(nthMusicId).addEventListener("click", displayDetailMusic);
 
@@ -1098,10 +1482,15 @@ var fetchAttachments = async (messageId, attachmentId, emailId, token, attachTyp
 
                             document.getElementsByClassName("modal-content")[0].appendChild(nodeSection);
                             var nodeBr = document.createElement("br");
-                            showDetail("modalMusic", attachFileName_origin, attachFileSize, displayExt, fromEmailAddr, detailDate);
+                            showDetail("modalMusic", attachFileName_origin, attachFileSize, displayExt, fromEmailAddr, detailDate, emailId);
 
+                            g_emailId = emailId
                             document.getElementById("viewEmail").addEventListener("click", viewEmailWindow);
                             document.getElementById("downloadAttach").addEventListener("click", downloadFunc);
+                            // document.getElementById("deleteAttach").addEventListener("click", function () {
+                            //     deleteAttachment(emailId);
+                            // });
+
                             document.getElementById("deleteAttach").addEventListener("click", deleteAttachment);
                             document.getElementById("closeSpan").addEventListener("click", closeModalFunc);
                         }
@@ -1109,6 +1498,37 @@ var fetchAttachments = async (messageId, attachmentId, emailId, token, attachTyp
                         function downloadFunc() {
                             document.getElementById("downloadAttach").removeEventListener("click", downloadFunc);
                             downloadFile(blob, attachFileName_origin);
+                        }
+                        function closeModalFunc() {
+
+                            document.getElementById("downloadAttach").removeEventListener("click", downloadFunc);
+                            document.getElementById("viewEmail").removeEventListener("click", viewEmailWindow);
+                            document.getElementById("deleteAttach").removeEventListener("click", deleteAttachment);
+
+                            document.getElementById("dateSlider").style.zIndex = 5;
+                            if (document.getElementById("modalImage")) {
+                                document.getElementById("modalImage").remove();
+                            }
+                            if (document.getElementById("modalPdf")) {
+                                document.getElementById("modalPdf").remove();
+                            }
+                            if (document.getElementById("modalWord")) {
+                                document.getElementById("modalWord").remove();
+                            }
+                            if (document.getElementById("modalText")) {
+                                document.getElementById("modalText").remove();
+                            }
+                            if (document.getElementById("modalVideo")) {
+                                document.getElementById("modalVideo").remove();
+                            }
+                            if (document.getElementById("modalMusic")) {
+                                document.getElementById("modalMusic").remove();
+                            }
+                            if (document.getElementById("modalOther")) {
+                                document.getElementById("modalOther").remove();
+                            }
+                            var modal = document.getElementById("myModal");
+                            modal.style.display = "none";
                         }
                         function viewEmailWindow() {
                             document.getElementById("viewEmail").removeEventListener("click", viewEmailWindow);
@@ -1155,7 +1575,7 @@ var fetchAttachments = async (messageId, attachmentId, emailId, token, attachTyp
                         nodeImage.setAttribute("height", "100px");
                         document.getElementById(otherDivId).appendChild(nodeImage);
 
-                        showDetail(nthOtherId, attachFileName_origin, attachFileSize, displayExt, fromEmailAddr, detailDate);
+                        showDetail(nthOtherId, attachFileName_origin, attachFileSize, displayExt, fromEmailAddr, detailDate, emailId);
 
                         document.getElementById(nthOtherId).addEventListener("click", displayDetailOther);
 
@@ -1174,16 +1594,51 @@ var fetchAttachments = async (messageId, attachmentId, emailId, token, attachTyp
 
                             document.getElementsByClassName("modal-content")[0].appendChild(nodeSection);
                             var nodeBr = document.createElement("br");
-                            showDetail("modalOther", attachFileName_origin, attachFileSize, displayExt, fromEmailAddr, detailDate);
+                            showDetail("modalOther", attachFileName_origin, attachFileSize, displayExt, fromEmailAddr, detailDate, emailId);
 
+                            g_emailId = emailId
                             document.getElementById("viewEmail").addEventListener("click", viewEmailWindow);
                             document.getElementById("downloadAttach").addEventListener("click", downloadFunc);
+                            // document.getElementById("deleteAttach").addEventListener("click", function () {
+                            //     deleteAttachment(emailId);
+                            // });
                             document.getElementById("deleteAttach").addEventListener("click", deleteAttachment);
                             document.getElementById("closeSpan").addEventListener("click", closeModalFunc);
                         }
                         function downloadFunc() {
                             document.getElementById("downloadAttach").removeEventListener("click", downloadFunc);
                             downloadFile(blob, attachFileName_origin);
+                        }
+                        function closeModalFunc() {
+
+                            document.getElementById("downloadAttach").removeEventListener("click", downloadFunc);
+                            document.getElementById("viewEmail").removeEventListener("click", viewEmailWindow);
+                            document.getElementById("deleteAttach").removeEventListener("click", deleteAttachment);
+
+                            document.getElementById("dateSlider").style.zIndex = 5;
+                            if (document.getElementById("modalImage")) {
+                                document.getElementById("modalImage").remove();
+                            }
+                            if (document.getElementById("modalPdf")) {
+                                document.getElementById("modalPdf").remove();
+                            }
+                            if (document.getElementById("modalWord")) {
+                                document.getElementById("modalWord").remove();
+                            }
+                            if (document.getElementById("modalText")) {
+                                document.getElementById("modalText").remove();
+                            }
+                            if (document.getElementById("modalVideo")) {
+                                document.getElementById("modalVideo").remove();
+                            }
+                            if (document.getElementById("modalMusic")) {
+                                document.getElementById("modalMusic").remove();
+                            }
+                            if (document.getElementById("modalOther")) {
+                                document.getElementById("modalOther").remove();
+                            }
+                            var modal = document.getElementById("myModal");
+                            modal.style.display = "none";
                         }
                         function viewEmailWindow() {
                             document.getElementById("viewEmail").removeEventListener("click", viewEmailWindow);
@@ -1204,32 +1659,39 @@ var fetchAttachments = async (messageId, attachmentId, emailId, token, attachTyp
 
 }
 
-function closeModalFunc() {
+// function closeModalFunc() {
 
-    if (document.getElementById("modalImage")) {
-        document.getElementById("modalImage").remove();
-    }
-    if (document.getElementById("modalPdf")) {
-        document.getElementById("modalPdf").remove();
-    }
-    if (document.getElementById("modalWord")) {
-        document.getElementById("modalWord").remove();
-    }
-    if (document.getElementById("modalText")) {
-        document.getElementById("modalText").remove();
-    }
-    if (document.getElementById("modalVideo")) {
-        document.getElementById("modalVideo").remove();
-    }
-    if (document.getElementById("modalMusic")) {
-        document.getElementById("modalMusic").remove();
-    }
-    if (document.getElementById("modalOther")) {
-        document.getElementById("modalOther").remove();
-    }
-    var modal = document.getElementById("myModal");
-    modal.style.display = "none";
-}
+//     
+
+//     document.getElementById("downloadAttach").removeEventListener("click", this.downloadFunc);
+//     document.getElementById("viewEmail").removeEventListener("click", this.viewEmailWindow);
+//     // document.getElementById("deleteAttach").removeEventListener("click", deleteAttachment);
+
+//     document.getElementById("dateSlider").style.zIndex = 5;
+//     if (document.getElementById("modalImage")) {
+//         document.getElementById("modalImage").remove();
+//     }
+//     if (document.getElementById("modalPdf")) {
+//         document.getElementById("modalPdf").remove();
+//     }
+//     if (document.getElementById("modalWord")) {
+//         document.getElementById("modalWord").remove();
+//     }
+//     if (document.getElementById("modalText")) {
+//         document.getElementById("modalText").remove();
+//     }
+//     if (document.getElementById("modalVideo")) {
+//         document.getElementById("modalVideo").remove();
+//     }
+//     if (document.getElementById("modalMusic")) {
+//         document.getElementById("modalMusic").remove();
+//     }
+//     if (document.getElementById("modalOther")) {
+//         document.getElementById("modalOther").remove();
+//     }
+//     var modal = document.getElementById("myModal");
+//     modal.style.display = "none";
+// }
 
 function showPDF(pdf_url, newPdfContentId, __CANVAS, __CANVAS_CTX) {
 
@@ -1279,7 +1741,7 @@ function showPage(page_no, __CANVAS, __CANVAS_CTX) {
     });
 }
 
-function showDetail(nthItemId, attachFileName_origin, attachFileSize, displayExt, fromEmailAddr, detailDate) {
+function showDetail(nthItemId, attachFileName_origin, attachFileSize, displayExt, fromEmailAddr, detailDate, emailId) {
 
     var nodeDetailDiv = document.createElement("div");
     var nodeDetailDivId = "divDetail" + nthItemId;
@@ -1345,29 +1807,73 @@ const downloadFile = (blob, fileName) => {
 
 function deleteAttachment() {
 
+    if (document.getElementById("myDropdown").classList.toggle("show")) {
 
-    // var email = GmailApp.getMessageById("1701ad5176308691").getRawContent();
+        document.getElementById("wholeDelete").addEventListener("click", wholeDelete);
+        document.getElementById("onlyAttachDelete").addEventListener("click", onlyAttachDelete);
 
-    // // Find the end boundary of html or plain-text email
-    // var re_html = /(-*\w*)(\r)*(\n)*(?=Content-Type: text\/html;)/.exec(email);
-    // var re = re_html || /(-*\w*)(\r)*(\n)*(?=Content-Type: text\/plain;)/.exec(email);
+    }
 
-    // // Find the index of the end of message boundary
-    // var start = re[1].length + re.index;
-    // var boundary = email.indexOf(re[1], start);
+    window.onclick = function (event) {
+        if (!event.target.matches('.dropbtn')) {
+            document.getElementById("wholeDelete").removeEventListener("click", wholeDelete)
+            document.getElementById("onlyAttachDelete").removeEventListener("click", onlyAttachDelete)
+            var dropdowns = document.getElementsByClassName("dropdown-content");
+            var i;
+            for (i = 0; i < dropdowns.length; i++) {
+                var openDropdown = dropdowns[i];
+                if (openDropdown.classList.contains('show')) {
+                    openDropdown.classList.remove('show');
+                }
+            }
+        }
+    }
+    function wholeDelete() {
 
-    // // Remove the attachments & Encode the attachment-free RFC 2822 formatted email string
-    // var base64_encoded_email = Utilities.base64EncodeWebSafe(email.substr(0, boundary));
-    // // Set the base64Encoded string to the `raw` required property
-    // var resource = {'raw': base64_encoded_email}
+        var funcFlag = "all";
+        console.log("clicked wholeDelete item")
+        document.getElementById("wholeDelete").removeEventListener("click", wholeDelete)
+        var SCRIPT_ID = "11sfr3a_GSIzYhZXaqKwYLYCnV6RCAbtgLJr4wTnUPHtA0ZG-xnfXGBHc";
 
-    // // Re-insert the email into the user gmail account with the insert time
-    // /* var response = Gmail.Users.Messages.insert(resource, 'me'); */
+        post({
+            'url': 'https://script.googleapis.com/v1/scripts/' + SCRIPT_ID + ':run',
+            'token': token,
+            'request': {
+                'function': 'removeAttachments',
+                'parameters': funcFlag + g_emailId
+            }
+        });
+        function post(options) {
 
-    // // Re-insert the email with the original date/time 
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', options.url, true);
+            xhr.setRequestHeader('Authorization', 'Bearer ' + options.token);
+            xhr.send(JSON.stringify(options.request))
+        }
 
-    // var response = Gmail.Users.Messages.insert(resource, 'me', 
-    //                     null, {'internalDateSource': 'dateHeader'});
+    }
+
+    function onlyAttachDelete() {
+
+        document.getElementById("onlyAttachDelete").removeEventListener("click", onlyAttachDelete)
+        var SCRIPT_ID = "11sfr3a_GSIzYhZXaqKwYLYCnV6RCAbtgLJr4wTnUPHtA0ZG-xnfXGBHc";
+
+        post({
+            'url': 'https://script.googleapis.com/v1/scripts/' + SCRIPT_ID + ':run',
+            'token': token,
+            'request': {
+                'function': 'removeAttachments',
+                'parameters': g_emailId
+            }
+        });
+        function post(options) {
+
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', options.url, true);
+            xhr.setRequestHeader('Authorization', 'Bearer ' + options.token);
+            xhr.send(JSON.stringify(options.request))
+        }
+    }
 
 }
 

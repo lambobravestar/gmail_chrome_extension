@@ -1,7 +1,7 @@
 {
     "manifest_version": 2,
     "name": "waldo",
-    "description": "Dittaching gmail attachments",
+    "description": "Manage your Gmail attachments easily",
     "version": "1.0.1",
     "content_scripts": [
         {
@@ -24,13 +24,13 @@
         }
     ],
     "icons": {
-        "16": "icon16.png",
-        "48": "icon48.png",
-        "128": "icon128.png"
+        "16": "waldo_icon_16.png",
+        "48": "waldo_icon_48.png",
+        "128": "waldo_icon_128.png"
     },
     "browser_action": {
         "default_icon": {
-            "128": "icon128.png"
+            "128": "waldo_icon_128.png"
         }
     },
     "web_accessible_resources": [
@@ -51,14 +51,16 @@
         "https://www.googleapis.com/",
         "identity",
         "identity.email",
-        "http://localhost/"
+        "http://localhost/",
+        "https://script.google.com/"
     ],
     "oauth2": {
-        "client_id": "875825219533-s8l59v4bpdnhgf4epuhl02qd970vua41.apps.googleusercontent.com",
+        "client_id": "67949110032-sp7upl9aje7u4un6l3rom97s1c9ct8cb.apps.googleusercontent.com",
         "scopes": [
             "https://mail.google.com/",
             "https://www.googleapis.com/auth/gmail.modify",
             "https://www.googleapis.com/auth/gmail.readonly",
+            "https://www.googleapis.com/auth/gmail.insert",
             "https://www.googleapis.com/auth/plus.login",
             "https://www.googleapis.com/auth/userinfo.email"
         ]

@@ -26,6 +26,12 @@
         style="margin-top: -258px;"></object>
     </div>
 
+    <div class="sortType">
+      <input type="radio" id="date" name="sortType" value="date" checked>
+      <label for="male">Date</label><br>
+      <input type="radio" id="size" name="sortType" value="size">
+      <label for="female">Size</label><br>
+    </div>
     <div id="searchBar">
       <input type="text" id="searchText" placeholder="Search" required>
     </div>
@@ -56,7 +62,6 @@
       </div>
     </div>
 
-    <!-- <button id="testBase64">TRY IT</button> -->
     <div id="thumbnail">
     </div>
 
@@ -72,12 +77,20 @@
               <span>View Email</span>
             </div>
           </div>
-          <div id="deleteAttach">
-            <object data="img/bin.svg" type="image/svg+xml" id="deleteSvg" width="20px" height="20px"></object>
-            <div style="margin-left: 5px;">
-              <span>Delete</span>
+
+          <div class="dropdown">
+            <div id="deleteAttach" class="dropbtn">
+              <object data="img/bin.svg" type="image/svg+xml" id="deleteSvg" width="20px" height="20px"></object>
+              <div style="margin-left: 5px;">
+                <span>Delete</span>
+              </div>
+            </div>
+            <div id="myDropdown" class="dropdown-content">
+              <a id="wholeDelete">Delete attachment with email</a>
+              <a id="onlyAttachDelete">Delete attachment and keep email</a>
             </div>
           </div>
+
           <div id="downloadAttach">
             <object data="img/download_button.svg" type="image/svg+xml" id="downloadSvg" style="margin-top: -10px;"
               width="100px" height="40px"></object>

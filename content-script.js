@@ -18,6 +18,8 @@ iframe.src = chrome.extension.getURL("popup.html")
 
 document.body.appendChild(iframe);
 
+
+
 function toggle() {
 
     var width = $(document).width();
